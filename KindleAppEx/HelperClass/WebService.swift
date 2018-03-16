@@ -13,34 +13,40 @@ enum WebserviceError: Error {
     case ServerError(String)
 }
 
+
+enum Result<T> {
+    case success(T?)
+    case error(String)
+}
+
 class WebService: NSObject {
     
-    func fetchBooks(kindleBooksUrl: String, completion : @escaping ((Data?, Error?)->Void)) {
+    func fetchBooks(kindleBooksUrl: String, completion : @escaping ((Result<Data>)->Void)) {
         print("Fetching Books...")
         guard let url = URL(string: kindleBooksUrl) else { return }
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             print("Fetching Book Completed")
             if error != nil {
-                completion(nil, WebserviceError.ServerError("Failed to fetch external Json books"))
+                completion(Result.error("Failed to fetch external Json books"))
                 return
             }
             if let data = data {
-                completion(data, nil)
+                completion(Result.success(data))
             }else{
-                completion(nil, WebserviceError.FoundNil("Data is Nil."))
+                completion(Result.error("Data is nil"))
             }
         }.resume()
     }
     
-    func fetchCoverImage(url: String, completion: @escaping ((UIImage?, Error?)->Void)){
+    func fetchCoverImage(url: String, completion: @escaping ((Result<UIImage>)->Void)){
         guard let coverImageUrl = URL(string: url) else { return }
         URLSession.shared.dataTask(with: coverImageUrl) { (data, response, error) in
             if error != nil {
-                completion(nil, WebserviceError.ServerError("Error fetching external image "))
+                completion(Result.error("Error fetching external image "))
             }
             guard let imageData = data else { return }
             let coverImage = UIImage(data: imageData)
-            completion(coverImage, nil)
+            completion(Result.success(coverImage))
             }.resume()
     }
     

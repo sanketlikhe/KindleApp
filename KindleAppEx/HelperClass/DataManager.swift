@@ -15,35 +15,40 @@ class DataManager: NSObject {
     var books: [Book] = []
     private let webService: WebService = WebService()
     
-    func fetchKindleBooks(completion:@escaping (([Book]?, Error?)->Void)) {
-        webService.fetchBooks(kindleBooksUrl: kindleBooksUrl) { [weak self](data, error) in
-            if let serverError = error {
-                completion(nil, serverError)
-                return
+    // TODO: Changing completion handler's arguments to Result enum is pending
+    func fetchKindleBooks(completion:@escaping (([Book]?, String?)->Void)) {
+        webService.fetchBooks(kindleBooksUrl: kindleBooksUrl) { (result) in
+            switch result{
+            case .error(let errorString):
+                completion(nil, errorString)
+            case .success(let data):
+                guard let data = data else { return }
+                let decoder = JSONDecoder()
+                do{
+                    let bookDictinary = try decoder.decode([Book].self, from: data)
+                    print(bookDictinary)
+                    self.books = []
+                    self.books=bookDictinary
+                }catch let err {
+                    print(err.localizedDescription)
+                }
+                completion(self.books, nil)
             }
-            guard let data = data else { return }
-            let decoder = JSONDecoder()
-            do{
-                let bookDictinary = try decoder.decode([Book].self, from: data)
-                print(bookDictinary)
-                self?.books = []
-                self?.books=bookDictinary
-            }catch let err {
-                print(err.localizedDescription)
-            }
-            
-            completion(self?.books, nil)
         }
+
     }
     
-    func downloadCoverImage(url: String, completion: @escaping ((UIImage?, Error?)->Void)){
-        webService.fetchCoverImage(url: url) { (coverImage, error) in
-            if error != nil {
-                completion(nil, error)
-            }
-            guard let coverImage = coverImage else { return }
-            DispatchQueue.main.async {
-                completion(coverImage, nil)
+    // TODO: Changing completion handler's arguments to Result enum is pending
+    func downloadCoverImage(url: String, completion: @escaping ((UIImage?, String?)->Void)){
+        webService.fetchCoverImage(url: url) { (result) in
+            switch result{
+            case .error(let errorString):
+                completion(nil, errorString)
+            case .success(let coverImage):
+                guard let coverImage = coverImage else { return }
+                DispatchQueue.main.async {
+                    completion(coverImage, nil)
+                }
             }
         }
     }
