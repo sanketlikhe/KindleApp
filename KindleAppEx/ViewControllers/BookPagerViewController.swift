@@ -10,13 +10,13 @@ import UIKit
 
 class BookPagerViewController: UICollectionViewController {
     
-    var book: Book?
+    var pages: [Page]?
     
     lazy private var pagerControl: UIPageControl = {
         let pageControl = UIPageControl()
         pageControl.translatesAutoresizingMaskIntoConstraints = false
         pageControl.currentPage = 0
-        pageControl.numberOfPages = book?.pages?.count ?? 0
+        pageControl.numberOfPages = pages?.count ?? 0
         pageControl.pageIndicatorTintColor = .lightGray
         pageControl.currentPageIndicatorTintColor = .darkGray
         return pageControl
@@ -25,7 +25,6 @@ class BookPagerViewController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         collectionView?.backgroundColor = .white
-        title = book?.title
         registerPageCellForCollectionView()
         setupBottomLayout()
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Close", style: .plain, target: self, action: #selector(handleCloseBook))
@@ -41,30 +40,6 @@ class BookPagerViewController: UICollectionViewController {
     
     @objc func handleCloseBook() {
         self.dismiss(animated: true, completion: nil)
-    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        coordinator.animate(alongsideTransition: { (_) in
-            let indexPath = IndexPath(item: self.pagerControl.currentPage, section: 0)
-            self.collectionView?.scrollToItem(at: indexPath, at: UICollectionViewScrollPosition.centeredHorizontally, animated: true)
-            self.collectionViewLayout.invalidateLayout()
-        }) { (_) in
-            
-        }
-    }
-    
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return book?.pages?.count ?? 0
-    }
-    
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! PageCell
-        cell.textLabel.text = book?.pages?[indexPath.row].text
-        return cell
-    }
-    
-    override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        pagerControl.currentPage = Int(targetContentOffset.pointee.x / view.frame.width)
     }
     
     fileprivate func setupBottomLayout(){
@@ -83,3 +58,30 @@ extension BookPagerViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+// UICollectionView DataSource and Delegate Methods
+extension BookPagerViewController{
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: { (_) in
+            let indexPath = IndexPath(item: self.pagerControl.currentPage, section: 0)
+            self.collectionView?.scrollToItem(at: indexPath, at: UICollectionViewScrollPosition.centeredHorizontally, animated: true)
+            self.collectionViewLayout.invalidateLayout()
+        }) { (_) in
+            
+        }
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return pages?.count ?? 0
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! PageCell
+        cell.textLabel.text = pages?[indexPath.row].text ?? ""
+        return cell
+    }
+    
+    override func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        pagerControl.currentPage = Int(targetContentOffset.pointee.x / view.frame.width)
+    }
+    
+}

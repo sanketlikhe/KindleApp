@@ -10,8 +10,7 @@ import UIKit
 
 class ViewController: UITableViewController {
 
-    var books: [Book]?
-    let dataManager = DataManager.sharedInstance
+    let dataManager: DataManager = DataManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,8 +31,7 @@ class ViewController: UITableViewController {
     
     fileprivate func fetchKindleBooks() {
         dataManager.fetchKindleBooks { (books, error) in
-            if let books = books{
-                self.books = books
+            if books != nil{
                 DispatchQueue.main.async { self.tableView.reloadData() }
             }
         }
@@ -93,6 +91,21 @@ class ViewController: UITableViewController {
         sortButton.centerYAnchor.constraint(equalTo: footerView.centerYAnchor).isActive = true
     }
     
+
+}
+
+extension ViewController{
+    
+    // TableViewDelegate method
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let booksPagerViewController = BookPagerViewController(collectionViewLayout: UICollectionViewFlowLayout())
+        booksPagerViewController.title = dataManager.books[indexPath.row].title
+        booksPagerViewController.pages = dataManager.getPagesForBook(book: dataManager.books[indexPath.row])
+        let navigationController = UINavigationController(rootViewController: booksPagerViewController)
+        present(navigationController, animated: true, completion: nil)
+    }
+    
+    // TableViewDataSource methods
     override func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         let footerView = UIView()
         footerView.backgroundColor = UIColor(red: 40/255, green: 40/255, blue: 40/255, alpha: 1)
@@ -112,29 +125,22 @@ class ViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return books?.count ?? 0
+        return dataManager.books.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cellId", for: indexPath) as! BookCell
-        let book = books?[indexPath.row]
-        cell.titleLabel.text = book?.title
-        cell.authorLabel.text = book?.author
-        dataManager.downloadCoverImage(url: book!.coverImageUrl!, completion: { (image, error) in
-            if let image = image{
-                cell.coverImageView.image = image
-            }
-        })
+        let book = dataManager.books[indexPath.row]
+        cell.titleLabel.text = book.title
+        cell.authorLabel.text = book.author
+        if let coverImageURL = book.coverImageUrl{
+            dataManager.downloadCoverImage(url: coverImageURL, completion: { (image, error) in
+                if let image = image{
+                    cell.coverImageView.image = image
+                }
+            })
+        }
         return cell
     }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedBook = books?[indexPath.row]
-        let booksPagerViewController = BookPagerViewController(collectionViewLayout: UICollectionViewFlowLayout())
-        booksPagerViewController.book = selectedBook
-        let navigationController = UINavigationController(rootViewController: booksPagerViewController)
-        present(navigationController, animated: true, completion: nil)
-    }
-
 }
 

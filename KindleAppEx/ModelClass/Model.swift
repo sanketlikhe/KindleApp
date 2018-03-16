@@ -11,21 +11,17 @@ import UIKit
 
 // Model to store Book data
 struct Book: Codable {
-    
     let id: Int?
     let title: String?
     let author: String?
     let pages: [Page]?
     let coverImageUrl: String?
-    
 }
 
 
 // Model to store Page Data
 struct Page: Codable {
-    
     let id: Int?
     let text: String?
-    
 }
 

@@ -11,13 +11,6 @@ import UIKit
 let kindleBooksUrl = "https://letsbuildthatapp-videos.s3-us-west-2.amazonaws.com/kindle.json"
 
 class DataManager: NSObject {
-
-    class var sharedInstance: DataManager{
-        struct Singleton {
-            static let instance = DataManager()
-        }
-        return Singleton.instance
-    }
     
     var books: [Book] = []
     private let webService: WebService = WebService()
@@ -52,6 +45,14 @@ class DataManager: NSObject {
             DispatchQueue.main.async {
                 completion(coverImage, nil)
             }
+        }
+    }
+    
+    func getPagesForBook(book: Book) -> [Page]{
+        if let pages = book.pages{
+            return pages
+        }else{
+            return []
         }
     }
     
